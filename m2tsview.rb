@@ -21,9 +21,9 @@ mask = [
 stats = {
   pid_count: {}
 }
-File.open(ARGV[0]) do |io|
-  until io.eof?
-    division = io.read(4).bytes.reverse.map.with_index { |n, i| n << i * 8 }.sum
+File.open(ARGV[0]) do |f|
+  until f.eof?
+    division = f.read(4).bytes.reverse.map.with_index { |n, i| n << i * 8 }.sum
 
     mask.each do |m|
       value = ((division & m.bit << m.shift) >> m.shift).to_s(16)
@@ -36,7 +36,7 @@ File.open(ARGV[0]) do |io|
     end
     puts
 
-    io.seek(184, IO::SEEK_CUR)
+    f.seek(184, IO::SEEK_CUR)
   end
 end
 
