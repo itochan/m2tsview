@@ -1,4 +1,10 @@
 require 'pp'
+require 'optparse'
+
+option = {}
+opts = OptionParser.new
+opts.on('-v') { option[:verbose] = true }
+opts.parse!(ARGV)
 
 Mask = Struct.new('Mask', :description, :bit, :shift)
 mask = [
@@ -21,11 +27,11 @@ File.open(ARGV[0]) do |io|
 
     mask.each do |m|
       value = ((division & m.bit << m.shift) >> m.shift).to_s(16)
-      puts "#{m.description}: 0x#{value}"
+      puts "#{m.description}: 0x#{value}" if option[:verbose]
 
       if m.description == 'PID'
-        stats[:pid_count][value.to_sym] = 0 unless stats[:pid_count][value.to_sym]
-        stats[:pid_count][value.to_sym] += 1
+        stats[:pid_count][value] = 0 unless stats[:pid_count][value]
+        stats[:pid_count][value] += 1
       end
     end
     puts
