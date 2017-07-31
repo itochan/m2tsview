@@ -6,30 +6,32 @@ mask = [
   Mask.new('Transport Error Indicator (TEI)', 0x8, 5 * 4),
   Mask.new('Payload Unit Start Indicator (PUSI)', 0x4, 5 * 4),
   Mask.new('Transport Priority', 0x2, 5 * 4),
-  Mask.new('PID', 0x2, 5 * 4),
+  Mask.new('PID', 0x1fff, 2 * 4),
   Mask.new('Transport Scrambling Control (TSC)', 0xc, 1 * 4),
   Mask.new('Adaptation field control', 0x3, 1 * 4),
   Mask.new('Continuity counter', 0xf, 0)
 ]
 
-output = {}
+stats = {
+  pid_count: {}
+}
 File.open(ARGV[0]) do |io|
-  # until io.eof?
-  # 50.times do
-  #   division = io.read(4).bytes
-  #
-  #   sync_byte = ((division & MASK_SYNC_BYTE) >> SHIFT_SYNC_BYTE).to_s(16)
-  #
-  #   io.seek(188, IO::SEEK_CUR)
-  #   packet_count += 1
-  # end
-  division = io.read(4).bytes.reverse.map.with_index { |n, i| n << i * 8 }.sum
+  until io.eof?
+    division = io.read(4).bytes.reverse.map.with_index { |n, i| n << i * 8 }.sum
 
-  mask.each do |m|
-    output[m.description] = ((division & m.bit << m.shift) >> m.shift)
+    mask.each do |m|
+      value = ((division & m.bit << m.shift) >> m.shift).to_s(16)
+      puts "#{m.description}: 0x#{value}"
+
+      if m.description == 'PID'
+        stats[:pid_count][value.to_sym] = 0 unless stats[:pid_count][value.to_sym]
+        stats[:pid_count][value.to_sym] += 1
+      end
+    end
+    puts
+
+    io.seek(184, IO::SEEK_CUR)
   end
-  break
 end
 
-pp output
-# puts "TS packet count: #{packet_count}"
+pp stats
